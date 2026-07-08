@@ -1,0 +1,13 @@
+{
+  "name": "sonoplastia-workers",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build-content": "node tools/generate-content.js",
+    "inline-worker": "node tools/inline-worker.js"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "marked": "^5.0.2"
+  }
+}

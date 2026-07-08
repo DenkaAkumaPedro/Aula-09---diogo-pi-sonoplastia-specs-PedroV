@@ -1,0 +1,9 @@
+name = "sonoplastia-workers"
+main = "src/index.js"
+compatibility_date = "2026-07-08"
+# Fill these fields before publishing
+account_id = ""
+zone_id = ""
+workers_dev = true
+route = ""
+type = "modules"
