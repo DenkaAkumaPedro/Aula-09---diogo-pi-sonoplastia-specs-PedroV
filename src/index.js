@@ -1,10 +1,44 @@
-import content from './content.json' assert { type: 'json' };
+import content from './content.json' with { type: 'json' };
+
+const GITHUB_OWNER = 'DenkaAkumaPedro';
+const GITHUB_REPO = 'Aula-09---diogo-pi-sonoplastia-specs-PedroV';
+const GITHUB_BRANCH = 'main';
 
 function escapeHtml(s) {
   return String(s)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+}
+
+function normalizeValue(value) {
+  return String(value || '').replace(/\\/g, '/');
+}
+
+function toPublicAssetUrl(value) {
+  const normalized = normalizeValue(value || '').replace(/^\//, '');
+  if (!normalized) return null;
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+  return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${normalized}`;
+}
+
+function getContentEntry(key) {
+  const direct = content[key];
+  if (direct !== undefined) return direct;
+  const legacy = content[key.replace(/\//g, '\\')];
+  return legacy;
+}
+
+function parseFrontmatter(raw) {
+  if (typeof raw !== 'string') return {};
+  const match = raw.match(/^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/);
+  if (!match) return {};
+  const values = {};
+  for (const line of match[1].split(/\r?\n/)) {
+    const m = line.match(/^([A-Za-z0-9_]+):\s*(.+)$/);
+    if (m) values[m[1]] = m[2].trim().replace(/^['"]|['"]$/g, '');
+  }
+  return values;
 }
 
 function mdToHtml(md) {
@@ -80,12 +114,11 @@ export default {
 
     // Home
     if (pathname === '/' || pathname === '/index.html') {
-      const artistEntry = content['artista/index.md'] || '';
+      const artistEntry = getContentEntry('artista/index.md') || '';
       const artistMdRaw = (typeof artistEntry === 'object' && artistEntry.raw) ? artistEntry.raw : (typeof artistEntry === 'string' ? artistEntry : '');
-      const titleMatch = (artistMdRaw.match(/^#\s+(.+)$/m) || [null, 'Sonoplastia 2026']);
-      const title = titleMatch[1];
-      const descriptionEntry = content['artista/musica.md'] || '';
-      const description = (typeof descriptionEntry === 'object' && descriptionEntry.html) ? descriptionEntry.html : (typeof descriptionEntry === 'string' ? escapeHtml(descriptionEntry) : '');
+      const artistMeta = parseFrontmatter(artistMdRaw);
+      const title = artistMeta.heroTitle || artistMeta.title || 'Sonoplastia 2026';
+      const description = (typeof artistEntry === 'object' && artistEntry.html) ? artistEntry.html : (typeof artistEntry === 'string' ? escapeHtml(artistEntry) : '');
       // build gallery thumbnails
       const galleryList = [];
       for (const k of Object.keys(content)) {
@@ -110,10 +143,10 @@ export default {
         }
       }
 
-      const soundsAvailable = Object.keys(content).find(k => k.startsWith('sounds/') || k.includes('/sounds/'));
-      const audioSrc = soundsAvailable ? '/' + (typeof content[soundsAvailable] === 'string' ? content[soundsAvailable] : soundsAvailable) : null;
+      const soundsAvailable = Object.keys(content).find(k => normalizeValue(k).startsWith('sounds/'));
+      const audioSrc = soundsAvailable ? toPublicAssetUrl(typeof getContentEntry(soundsAvailable) === 'string' ? getContentEntry(soundsAvailable) : soundsAvailable) : null;
 
-      const galleryHtml = galleryList.slice(0,6).map(img => `<img class="thumb" src="/${img}" alt="Galeria"/>`).join('');
+      const galleryHtml = galleryList.slice(0,6).map(img => `<img class="thumb" src="${toPublicAssetUrl(img)}" alt="Galeria"/>`).join('');
 
       const html = renderPage(title, `
         <section class="hero">
@@ -158,13 +191,13 @@ export default {
 
     // Static pages: termos and privacidade
     if (pathname === '/termos' || pathname === '/termos/') {
-      const md = content['paginas/termos-de-uso.md'] || '# Termos de Uso\n\nConteúdo não disponível.';
+      const md = getContentEntry('paginas/termos-de-uso.md') || '# Termos de Uso\n\nConteúdo não disponível.';
       const html = renderPage('Termos de Uso', mdToHtml(md));
       return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
     }
 
     if (pathname === '/privacidade' || pathname === '/privacidade/') {
-      const md = content['paginas/politica-privacidade.md'] || '# Política de Privacidade\n\nConteúdo não disponível.';
+      const md = getContentEntry('paginas/politica-privacidade.md') || '# Política de Privacidade\n\nConteúdo não disponível.';
       const html = renderPage('Política de Privacidade', mdToHtml(md));
       return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
     }

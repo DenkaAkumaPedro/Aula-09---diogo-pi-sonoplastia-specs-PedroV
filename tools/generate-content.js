@@ -6,12 +6,29 @@ const { marked } = require('marked');
 const DATA_DIR = path.resolve(__dirname, '..', 'DATA');
 const OUT_FILE = path.resolve(__dirname, '..', 'src', 'content.json');
 
+function normalizeKey(key) {
+  return key.replace(/\\/g, '/');
+}
+
+function stripFrontmatter(raw) {
+  const text = String(raw || '');
+  if (!text.startsWith('---')) return text;
+  const lines = text.split(/\r?\n/);
+  if (lines[0].trim() !== '---') return text;
+  for (let i = 1; i < lines.length; i++) {
+    if (lines[i].trim() === '---') {
+      return lines.slice(i + 1).join('\n').trim();
+    }
+  }
+  return text;
+}
+
 function walk(dir, base = '') {
   const results = {};
   const list = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of list) {
     const full = path.join(dir, entry.name);
-    const rel = path.join(base, entry.name);
+    const rel = normalizeKey(path.join(base, entry.name));
     if (entry.isDirectory()) {
       Object.assign(results, walk(full, rel));
     } else {
@@ -19,11 +36,11 @@ function walk(dir, base = '') {
       try {
         if (ext === '.md' || ext === '.txt') {
           const raw = fs.readFileSync(full, 'utf8');
-          // store both raw markdown and pre-rendered HTML
+          const body = stripFrontmatter(raw);
           results[rel] = {
             type: 'markdown',
             raw,
-            html: marked.parse(raw)
+            html: marked.parse(body)
           };
         } else if (ext === '.yaml' || ext === '.yml') {
           const raw = fs.readFileSync(full, 'utf8');
