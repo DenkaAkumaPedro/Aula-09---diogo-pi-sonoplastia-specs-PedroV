@@ -219,7 +219,17 @@ function renderPage(title, bodyHtml) {
     .brand{font-weight:700;font-size:20px}
     .hero{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
     .hero-main h2{margin:0 0 8px 0;font-size:28px}
-    .meta{color:var(--muted);font-size:14px}
+    .meta{color:var(--muted);font-size:14px;line-height:1.7}
+    .content-shell :where(h1,h2,h3,h4){margin:1.1rem 0 .6rem;line-height:1.2;color:#111827}
+    .content-shell :where(p,li,blockquote){line-height:1.7;margin:0 0 1rem}
+    .content-shell ul{padding-left:1.2rem;margin:0 0 1rem}
+    .content-shell li{margin-bottom:.4rem}
+    .content-shell a{color:var(--accent);text-decoration:none}
+    .content-shell a:hover{text-decoration:underline}
+    .content-shell img{max-width:100%;border-radius:10px;display:block;margin:1rem 0}
+    .content-shell table{width:100%;border-collapse:collapse;margin:1rem 0}
+    .content-shell th,.content-shell td{border:1px solid #e5e7eb;padding:.6rem .75rem;text-align:left}
+    .content-shell blockquote{border-left:4px solid var(--accent);padding-left:1rem;color:var(--muted);margin:1rem 0}
     .player{background:#f3f4f6;padding:12px;border-radius:10px}
     .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px}
     .thumb{width:100%;height:100px;object-fit:cover;border-radius:8px;display:block}
@@ -234,7 +244,7 @@ function renderPage(title, bodyHtml) {
       <div class="brand">Sonoplastia 2026</div>
       <nav style="margin-left:auto"><a href="/" style="margin-right:12px">Início</a><a href="/termos" style="margin-right:12px">Termos</a><a href="/privacidade">Privacidade</a></nav>
     </header>
-    <main>
+    <main class="content-shell">
       ${bodyHtml}
     </main>
     <footer>&copy; 2026 Sonoplastia — Rede Daora</footer>
@@ -288,7 +298,7 @@ export default {
         <section class="hero">
           <div class="hero-main">
             <h2>${escapeHtml(title)}</h2>
-            <div class="meta">${description}</div>
+            <div class="meta content-shell">${description}</div>
             <p><a class="cta" href="/api/content">Ver Conteúdo (JSON)</a></p>
           </div>
           <aside>
